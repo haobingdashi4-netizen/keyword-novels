@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>キーワード小説ジェネレーター</title>
+  <style>
+    body { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; background: #f4f1ea; color: #333; max-width: 700px; margin: 40px auto; padding: 20px; }
+    .container { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    h1 { font-size: 1.5rem; text-align: center; border-bottom: 2px solid #e0d8c8; padding-bottom: 10px; }
+    label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9rem; }
+    input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1rem; }
+    button { width: 100%; padding: 12px; margin-top: 20px; background: #4a6b5d; color: #fff; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer; }
+    button:disabled { background: #999; cursor: not-allowed; }
+    #result { margin-top: 30px; padding: 20px; background: #faf9f6; border-left: 4px solid #4a6b5d; line-height: 1.9; white-space: pre-wrap; display: none; }
+    .loading { text-align: center; color: #666; margin-top: 20px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📖 キーワードから物語をつくる</h1>
+   
+    <label>入れてほしいキーワード（3つまで・カンマ区切り）</label>
+    <input type="text" id="keywords" placeholder="例：雨の日の古書店、壊れた懐中時計、記憶を売る男">
+
+    <label>物語のジャンル・雰囲気</label>
+    <select id="genre">
+      <option value="切ないファンタジー">切ないファンタジー</option>
+      <option value="心温まる日常系">心温まる日常系</option>
+      <option value="少し不思議なミステリー">少し不思議なミステリー</option>
+      <option value="SF・近未来">SF・近未来</option>
+      <option value="クスッと笑えるコメディ">クスッと笑えるコメディ</option>
+    </select>
+
+    <button id="generateBtn" onclick="generateNovel()">小説を生成する</button>
+    <div id="loading" class="loading">物語を執筆しています...（10〜20秒ほどかかります）</div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function generateNovel() {
+      const keywords = document.getElementById('keywords').value.trim();
+      const genre = document.getElementById('genre').value;
+      const btn = document.getElementById('generateBtn');
+      const loading = document.getElementById('loading');
+      const resultDiv = document.getElementById('result');
+
+      if (!keywords) {
+        alert("キーワードを入力してください！");
+        return;
+      }
+
+      btn.disabled = true;
+      loading.style.display = "block";
+      resultDiv.style.display = "none";
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keywords, genre })
+        });
+        const data = await response.json();
+       
+        if (data.novel) {
+          resultDiv.textContent = data.novel;
+          resultDiv.style.display = "block";
+        } else {
+          alert("エラーが発生しました: " + (data.error || "生成失敗"));
+        }
+      } catch (e) {
+        alert("通信エラーが発生しました。");
+      } finally {
+        btn.disabled = false;
+        loading.style.display = "none";
+      }
+    }
+  </script>
+</body>
+</html>
